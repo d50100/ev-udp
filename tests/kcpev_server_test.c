@@ -19,7 +19,19 @@
 
 void recv_cb(KcpevServer *server, Kcpev* client, const char* buf, size_t len)
 {
-    kcpev_send(client, buf, len);
+	// 获取对端的IP地址和端口号，和数据
+	struct sockaddr_in addr;
+	socklen_t addrlen = sizeof(addr);
+	int ret = getpeername(client->data, (struct sockaddr*)&addr, &addrlen);
+	if (ret < 0){
+		debug("getpeername error");
+	}
+	else
+	{
+		debug("recv from client: %s:%d %s", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), buf);
+	}
+    
+    // kcpev_send(client, buf, len);
 }
 
 int main()

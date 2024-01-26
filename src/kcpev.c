@@ -229,7 +229,7 @@ int kcpev_bind(Kcpev *kcpev, const char *port, int family, int reuse)
     int ret = 0;
 
     // tcp连接是必须的
-    ret = kcpev_bind_tcp(&kcpev->tcp, port, family, reuse);
+	ret = kcpev_bind_tcp(&kcpev->tcp, port, family, reuse);  // 建立tcpsocket 并绑定端口
     check(ret >= 0, "kcpev_bind_tcp");
 
     struct sockaddr_storage client_addr;
@@ -243,7 +243,7 @@ int kcpev_bind(Kcpev *kcpev, const char *port, int family, int reuse)
     debug("local tcp port[%s : %s]", hbuf, sbuf);
 
     // 如果udp创建失败，会退化到用tcp来通信
-    ret = kcpev_bind_udp(&kcpev->udp, port, family, reuse);
+	ret = kcpev_bind_udp(&kcpev->udp, port, family, reuse);  // 建立udpsocket 并绑定端口
     getsockname(kcpev->udp.sock, (struct sockaddr*)&client_addr, &addr_size);
     getnameinfo((struct sockaddr *)&client_addr, addr_size, hbuf, sizeof(hbuf), \
         sbuf, sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV);
@@ -1183,15 +1183,15 @@ Kcpev *kcpev_create_client(struct ev_loop *loop, const char *port, int family)
 {
     int ret;
 
-    ret = kcpev_startup();
-    check(ret == 1, "");
+    // ret = kcpev_startup();
+    // check(ret == 1, "");
 
-    Kcpev *kcpev = kcpev_create();
+    Kcpev *kcpev = kcpev_create();  // 分配内存: kcpev_malloc(sizeof(Kcpev));
     check(kcpev, "kcpev_create");
     
-    ret = kcpev_bind(kcpev, port, family, 0);
+	ret = kcpev_bind(kcpev, port, family, 0);  // 绑定tcp端口和udp端口
     check(ret >= 0, "kcpev_bind");
-
+    // 创建 kcp
     ret = kcpev_create_kcp(&kcpev->udp, kcpev->key.split_key.conv, KCPEV_KCP_MODE);
     check(ret >= 0, "create kcp");
 
@@ -1213,22 +1213,22 @@ KcpevServer *kcpev_create_server(struct ev_loop *loop, const char *port, int fam
 {
     int ret;
 
-    ret = kcpev_startup();
-    check(ret == 1, "");
+    // ret = kcpev_startup();  
+    // check(ret == 1, "");
 
-    KcpevServer *kcpev = kcpev_server_create();
+    KcpevServer *kcpev = kcpev_server_create();   // 分配内存:  kcpev_malloc(sizeof(KcpevServer));
     check(kcpev, "kcpev_create");
 
-    strncpy(kcpev->port, port, sizeof(kcpev->port));
+    strncpy(kcpev->port, port, sizeof(kcpev->port));  // 设置服务器监听端口
 
     int reuse = 1;
-    ret = kcpev_bind((Kcpev *)kcpev, port, family, reuse);
+	ret = kcpev_bind((Kcpev*)kcpev, port, family, reuse);  // 分别创建tcp和udp socket , 并绑定端口
     check(ret >= 0, "kcpev_server_bind");
-
+	// 绑定两个事件的回调函数, 1. 有客户端tcp连接 (辅助udp连接创建session的) 2. 有客户端udp数据
     ret = kcpev_init_ev((Kcpev *)kcpev, loop, kcpev, tcp_accept, server_udp_recv_all);
     check(ret >= 0, "init ev");
 
-    ret = kcpev_listen((Kcpev *)kcpev, backlog);
+	ret = kcpev_listen((Kcpev*)kcpev, backlog);  // tcp socket 监听 (来自客户端的连接)
     check(ret >= 0, "listen");
 
     return kcpev;
