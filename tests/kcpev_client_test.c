@@ -10,6 +10,9 @@
 #   include <sys/types.h>
 #   include <sys/socket.h>
 #endif
+#include <ev.h>
+#include "kcpev.h"
+
 #include "dbg.h"
 #include "test.h"
 
@@ -38,15 +41,22 @@ void send_file(EV_P_ struct ev_io* w, int revents) {
     // 发送文件 
 	FILE* fp = fopen("/root/test.txt", "rb");
 	if (fp == NULL) {
+		debug("open file error");
 		return;
 	}
     // 分段发送文件
 	char buf[1024];
+	
+
 	while (1) {
+		memset(buf, 0, sizeof(buf));
+
 		int ret = fread(buf, 1, sizeof(buf), fp);
 		if (ret <= 0) {
+			debug("read file end");
 			break;
 		}
+		debug("send %d bytes: %s", ret, buf);
 		kcpev_send(w->data, buf, ret);
 	}
 	fclose(fp);
@@ -68,8 +78,14 @@ int main()
 
     kcpev_set_cb(kcpev, recv_cb, NULL);
 
-	ev_timer* timer = ev_timer_new(loop, send_file, 1, 0);
-	ev_timer_start(loop, timer);
+	ev_timer* evh = malloc(sizeof(ev_timer));
+	memset(evh, 0, sizeof(ev_timer));
+	check_mem(evh);
+
+	evh->data = kcpev;
+	ev_timer_init(evh, send_file, 1, 0);
+	ev_timer_start(kcpev->loop, evh);
+
 
     ev_run(loop, 0);
 	return 0;

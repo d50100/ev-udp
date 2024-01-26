@@ -22,7 +22,7 @@ void recv_cb(KcpevServer *server, Kcpev* client, const char* buf, size_t len)
 	// 获取对端的IP地址和端口号，和数据
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
-	int ret = getpeername(client->data, (struct sockaddr*)&addr, &addrlen);
+	int ret = getpeername(client->udp.sock, (struct sockaddr*)&addr, &addrlen);
 	if (ret < 0){
 		debug("getpeername error");
 	}
