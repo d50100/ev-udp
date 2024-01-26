@@ -30,3 +30,4 @@
 *.vs
 *out
 CMakeSettings.json
+new_version_kcp

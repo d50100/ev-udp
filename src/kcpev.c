@@ -577,7 +577,15 @@ int on_server_recv(KcpevServer *server, Kcpev *client, const char *buf, size_t l
     {
         case COMMAND_DATA:
             
-            // debug("recv client data: [%s : %s], [%d]", hbuf, sbuf, data_len);
+            debug("recv client data: [%s : %s], [%d]", hbuf, sbuf, data_len);
+
+            // 字节流打印
+			//for (int i = 0; i < data_len; i++)
+			//{
+			//	printf("%02x ", data[i]);
+			//}
+			//printf("\n");
+
             server->recv_cb(server, client, data, data_len);
             break;
 
